@@ -315,11 +315,11 @@ importers:
         specifier: ^4.8.3
         version: 4.8.3
       vee-validate:
-        specifier: 4.12.5
+        specifier: ../vee-validate
         version: link:../vee-validate
       zod:
-        specifier: github:colinhacks/zod#master
-        version: github.com/colinhacks/zod/e5e86195022c1ba231478852e414c17bf74f230b
+        specifier: github:mehcode/zod#master-with-bundle
+        version: github.com/mehcode/zod/d1f21779fedfd2cb60c64a4e18b0311407eea499
 
 packages:
 
@@ -14652,8 +14652,8 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
     dev: false
 
-  github.com/colinhacks/zod/e5e86195022c1ba231478852e414c17bf74f230b:
-    resolution: {tarball: https://codeload.github.com/colinhacks/zod/tar.gz/e5e86195022c1ba231478852e414c17bf74f230b}
+  github.com/mehcode/zod/d1f21779fedfd2cb60c64a4e18b0311407eea499:
+    resolution: {tarball: https://codeload.github.com/mehcode/zod/tar.gz/d1f21779fedfd2cb60c64a4e18b0311407eea499}
     name: zod
     version: 3.22.4
     prepare: true
