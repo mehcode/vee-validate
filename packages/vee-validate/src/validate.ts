@@ -17,13 +17,13 @@ import { isCallable, FieldValidationMetaInfo } from '../../shared';
 /**
  * Used internally
  */
-interface FieldValidationContext<TValue = unknown> {
+interface FieldValidationContext<TInput = unknown, TOutput = TInput> {
   name: string;
   label?: string;
   rules:
-    | GenericValidateFunction<TValue>
-    | GenericValidateFunction<TValue>[]
-    | TypedSchema<TValue>
+    | GenericValidateFunction<TInput>
+    | GenericValidateFunction<TInput>[]
+    | TypedSchema<TInput, TOutput>
     | string
     | Record<string, unknown>;
   bails: boolean;
@@ -40,18 +40,18 @@ interface ValidationOptions {
 /**
  * Validates a value against the rules.
  */
-export async function validate<TValue = unknown>(
-  value: TValue,
+export async function validate<TInput, TOutput>(
+  value: TInput,
   rules:
     | string
     | Record<string, unknown | unknown[]>
-    | GenericValidateFunction<TValue>
-    | GenericValidateFunction<TValue>[]
-    | TypedSchema<TValue>,
+    | GenericValidateFunction<TInput>
+    | GenericValidateFunction<TInput>[]
+    | TypedSchema<TInput, TOutput>,
   options: ValidationOptions = {},
-): Promise<ValidationResult> {
+): Promise<ValidationResult<TOutput>> {
   const shouldBail = options?.bails;
-  const field: FieldValidationContext<TValue> = {
+  const field: FieldValidationContext<TInput, TOutput> = {
     name: options?.name || '{field}',
     rules,
     label: options?.label,
@@ -60,18 +60,20 @@ export async function validate<TValue = unknown>(
   };
 
   const result = await _validate(field, value);
-  const errors = result.errors;
 
   return {
-    errors,
-    valid: !errors.length,
+    ...result,
+    valid: !result.errors.length,
   };
 }
 
 /**
  * Starts the validation process.
  */
-async function _validate<TValue = unknown>(field: FieldValidationContext<TValue>, value: TValue) {
+async function _validate<TInput, TOutput>(
+  field: FieldValidationContext<TInput, TOutput>,
+  value: TInput,
+): Promise<Omit<ValidationResult<TOutput>, 'valid'>> {
   if (isTypedSchema(field.rules) || isYupValidator(field.rules)) {
     return validateFieldWithTypedSchema(value, field.rules);
   }
@@ -217,6 +219,7 @@ async function validateFieldWithTypedSchema(value: unknown, schema: TypedSchema 
   }
 
   return {
+    value: result.value,
     errors: messages,
   };
 }
@@ -302,7 +305,7 @@ export async function validateTypedSchema<TValues, TOutput = TValues>(
   const typedSchema = isTypedSchema(schema) ? schema : yupToTypedSchema(schema);
   const validationResult = await typedSchema.parse(deepCopy(values));
 
-  const results: Partial<Record<Path<TValues>, ValidationResult>> = {};
+  const results: Partial<Record<Path<TValues>, ValidationResult<never>>> = {};
   const errors: Partial<Record<Path<TValues>, string>> = {};
   for (const error of validationResult.errors) {
     const messages = error.errors;
@@ -349,7 +352,7 @@ export async function validateObjectSchema<TValues, TOutput>(
   let isAllValid = true;
   const validationResults = await Promise.all(validations);
 
-  const results: Partial<Record<Path<TValues>, ValidationResult>> = {};
+  const results: Partial<Record<Path<TValues>, ValidationResult<never>>> = {};
   const errors: Partial<Record<Path<TValues>, string>> = {};
   for (const result of validationResults) {
     results[result.path] = {
